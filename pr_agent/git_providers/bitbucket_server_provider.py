@@ -1,21 +1,19 @@
 # pr_agent/git_providers/bitbucket_server_provider.py
 import difflib
 import re
-
-from packaging.version import parse as parse_version
+import shlex
+import subprocess
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
 from atlassian.bitbucket import Bitbucket
+from packaging.version import parse as parse_version
 from requests.exceptions import HTTPError
-import shlex
-import subprocess
 
 from ..algo.git_patch_processing import decode_if_bytes
 from ..algo.language_handler import is_valid_file
 from ..algo.types import EDIT_TYPE, FilePatchInfo
-from ..algo.utils import (find_line_number_of_relevant_line_in_file,
-                          load_large_diff)
+from ..algo.utils import find_line_number_of_relevant_line_in_file, load_large_diff
 from ..config_loader import get_settings
 from ..log import get_logger
 from .git_provider import GitProvider

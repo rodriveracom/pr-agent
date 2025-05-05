@@ -7,9 +7,7 @@ from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import (PRDescriptionHeader, clip_tokens,
-                          find_line_number_of_relevant_line_in_file,
-                          load_large_diff)
+from ..algo.utils import PRDescriptionHeader, clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
 from ..config_loader import get_settings
 from ..log import get_logger
 from .git_provider import GitProvider
@@ -22,11 +20,16 @@ try:
     # noinspection PyUnresolvedReferences
     # noinspection PyUnresolvedReferences
     from azure.devops.connection import Connection
+
     # noinspection PyUnresolvedReferences
-    from azure.devops.v7_1.git.models import (Comment, CommentThread,
-                                              GitPullRequest,
-                                              GitPullRequestIterationChanges,
-                                              GitVersionDescriptor)
+    from azure.devops.v7_1.git.models import (
+        Comment,
+        CommentThread,
+        GitPullRequest,
+        GitPullRequestIterationChanges,
+        GitVersionDescriptor,
+    )
+
     # noinspection PyUnresolvedReferences
     from azure.identity import DefaultAzureCredential
     from msrest.authentication import BasicAuthentication

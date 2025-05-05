@@ -1,9 +1,9 @@
 # pr_agent/git_providers/git_provider.py
-from abc import ABC, abstractmethod
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 import os
 import shutil
 import subprocess
+from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
 from pr_agent.algo.types import FilePatchInfo

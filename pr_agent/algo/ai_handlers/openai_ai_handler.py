@@ -1,6 +1,6 @@
 # pr_agent/algo/ai_handlers/openai_ai_handler.py
 from os import environ
-from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+
 import openai
 from openai import APIError, AsyncOpenAI, RateLimitError, Timeout
 from retry import retry

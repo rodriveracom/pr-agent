@@ -63,6 +63,7 @@ install-all: install ## Install pr-agent with all optional dependencies
 install-dev: ## Install development dependencies
 	@echo "${BLUE}Installing development tools...${RESET}"
 	uv pip install -e ".[dev]"
+	uv pip install -r requirements-dev.txt
 	@echo "${GREEN}Development dependencies installed successfully${RESET}"
 
 .PHONY: setup
