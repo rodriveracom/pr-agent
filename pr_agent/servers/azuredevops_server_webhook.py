@@ -1,4 +1,4 @@
-# This file contains the code for the Azure DevOps Server webhook server.
+# pr_agent/servers/azuredevops_server_webhook.py
 # The server listens for incoming webhooks from Azure DevOps Server and forwards them to the PR Agent.
 # ADO webhook documentation: https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops
 

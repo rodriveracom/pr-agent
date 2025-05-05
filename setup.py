@@ -1,4 +1,4 @@
-# for compatibility with legacy tools
+# setup.py
 # see: https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 from setuptools import setup
 

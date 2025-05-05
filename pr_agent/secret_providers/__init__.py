@@ -1,3 +1,4 @@
+# pr_agent/secret_providers/__init__.py
 from pr_agent.config_loader import get_settings
 
 

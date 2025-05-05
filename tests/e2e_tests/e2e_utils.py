@@ -1,3 +1,4 @@
+# tests/e2e_tests/e2e_utils.py
 FILE_PATH = "pr_agent/cli_pip.py"
 
 PR_HEADER_START_WITH = '### **User description**\nupdate cli_pip.py\n\n\n___\n\n### **PR Type**'

@@ -1,3 +1,4 @@
+# pr_agent/algo/__init__.py
 MAX_TOKENS = {
     'text-embedding-ada-002': 8000,
     'gpt-3.5-turbo': 16000,

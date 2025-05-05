@@ -1,4 +1,4 @@
-# Language Selection, source: https://github.com/bigcode-project/bigcode-dataset/blob/main/language_selection/programming-languages-to-file-extensions.json  # noqa E501
+# pr_agent/algo/language_handler.py
 from typing import Dict
 
 from pr_agent.config_loader import get_settings

@@ -1,4 +1,4 @@
-# Currently doing API calls - wrong !
+# tests/unittest/test_fetching_sub_issues.py
 
 
 # import unittest

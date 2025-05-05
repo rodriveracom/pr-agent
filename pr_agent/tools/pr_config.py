@@ -1,3 +1,4 @@
+# pr_agent/tools/pr_config.py
 from dynaconf import Dynaconf
 
 from pr_agent.config_loader import get_settings
