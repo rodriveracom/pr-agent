@@ -89,7 +89,7 @@ def is_draft_ready(data) -> bool:
         if 'draft' in data.get('changes', {}):
             if data['changes']['draft']['previous'] == 'true' and data['changes']['draft']['current'] == 'false':
                 return True
-            
+
         # for gitlab server version before 16
         elif 'title' in data.get('changes', {}):
             if 'Draft:' in data['changes']['title']['previous'] and 'Draft:' not in data['changes']['title']['current']:
@@ -217,8 +217,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     get_logger().info(f"Skipping draft MR: {url}")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
-                commands_on_push = get_settings().get(f"gitlab.push_commands", {})
-                handle_push_trigger = get_settings().get(f"gitlab.handle_push_trigger", False)
+                commands_on_push = get_settings().get("gitlab.push_commands", {})
+                handle_push_trigger = get_settings().get("gitlab.handle_push_trigger", False)
                 if not commands_on_push or not handle_push_trigger:
                     get_logger().info("Push event, but no push commands found or push trigger is disabled")
                     return JSONResponse(status_code=status.HTTP_200_OK,
@@ -226,7 +226,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
                 get_logger().debug(f'A push event has been received: {url}')
                 await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context, data)
-                
+
             # for draft to ready triggered merge requests
             elif object_attributes.get('action') == 'update' and is_draft_ready(data):
                 url = object_attributes.get('url')

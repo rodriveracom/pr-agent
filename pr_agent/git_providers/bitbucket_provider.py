@@ -2,7 +2,6 @@
 import difflib
 import json
 import re
-from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -27,7 +26,7 @@ def _gef_filename(diff):
 
 class BitbucketProvider(GitProvider):
     def __init__(
-        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+        self, pr_url: str | None = None, incremental: bool | None = False
     ):
         s = requests.Session()
         s.headers["Content-Type"] = "application/json"
@@ -94,14 +93,14 @@ class BitbucketProvider(GitProvider):
         try:
             parsed_url = urlparse(self.pr_url)
             return f"{parsed_url.scheme}://{parsed_url.netloc}/{self.workspace_slug}/{self.repo_slug}.git"
-        except Exception as e:
+        except Exception:
             get_logger().exception(f"url is not a valid merge requests url: {self.pr_url}")
             return ""
 
     # Given a git repo url, return prefix and suffix of the provider in order to view a given file belonging to that repo.
     # Example: git clone git clone https://bitbucket.org/codiumai/pr-agent.git and branch: main -> prefix: "https://bitbucket.org/codiumai/pr-agent/src/main", suffix: ""
     # In case git url is not provided, provider will use PR context (which includes branch) to determine the prefix and suffix.
-    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> tuple[str, str]:
         scheme_and_netloc = None
         if repo_git_url:
             parsed_git_url = urlparse(repo_git_url)
@@ -223,13 +222,13 @@ class BitbucketProvider(GitProvider):
                 names_original = [d.new.path for d in diffs_original]
                 names_kept = [d.new.path for d in diffs]
                 names_filtered = list(set(names_original) - set(names_kept))
-                get_logger().info(f"Filtered out [ignore] files for PR", extra={
+                get_logger().info("Filtered out [ignore] files for PR", extra={
                     'original_files': names_original,
                     'names_kept': names_kept,
                     'names_filtered': names_filtered
 
                 })
-            except Exception as e:
+            except Exception:
                 pass
 
         # get the pr patches
@@ -313,7 +312,7 @@ class BitbucketProvider(GitProvider):
                 else:
                     if counter_valid == MAX_FILES_ALLOWED_FULL // 2:
                         get_logger().info(
-                            f"Bitbucket too many files in PR, will avoid loading full content for rest of files")
+                            "Bitbucket too many files in PR, will avoid loading full content for rest of files")
                     original_file_content_str = ""
                     new_file_content_str = ""
             except Exception as e:
@@ -514,14 +513,14 @@ class BitbucketProvider(GitProvider):
             "Bitbucket provider does not support issue comments yet"
         )
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         return True
 
     @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int, int]:
+    def _parse_pr_url(pr_url: str) -> tuple[str, int, int]:
         parsed_url = urlparse(pr_url)
 
         if "bitbucket.org" not in parsed_url.netloc:

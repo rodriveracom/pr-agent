@@ -64,9 +64,6 @@ include = [
 [project.scripts]
 pr-agent = "pr_agent.cli:run"
 
-[tool.ruff]
-line-length = 120
-
 lint.select = [
   "E",    # Pyflakes
   "F",    # Pyflakes
@@ -88,10 +85,45 @@ lint.exclude = ["api/code_completions"]
 
 lint.ignore = ["E999", "B008"]
 
+# Shared tool configurations
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "ANN", # flake8-annotations
+    "S",   # flake8-bandit
+    "A",   # flake8-builtins
+]
+
 [tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101"]  # Disable S101 (assert warning) in test files
 "__init__.py" = [
   "E402",
 ] # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312", "py313"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]

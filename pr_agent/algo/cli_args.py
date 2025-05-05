@@ -1,6 +1,5 @@
 # pr_agent/algo/cli_args.py
-import hashlib
-from base64 import b64decode, b64encode, encode
+from base64 import b64decode
 
 
 class CliArgs:

@@ -1,7 +1,6 @@
 # pr_agent/git_providers/local_git_provider.py
 from collections import Counter
 from pathlib import Path
-from typing import List
 
 from git import Repo
 
@@ -16,7 +15,7 @@ class PullRequestMimic:
     This class mimics the PullRequest class from the PyGithub library for the LocalGitProvider.
     """
 
-    def __init__(self, title: str, diff_files: List[FilePatchInfo]):
+    def __init__(self, title: str, diff_files: list[FilePatchInfo]):
         self.title = title
         self.diff_files = diff_files
 
@@ -98,7 +97,7 @@ class LocalGitProvider(GitProvider):
         self.diff_files = diff_files
         return diff_files
 
-    def get_files(self) -> List[str]:
+    def get_files(self) -> list[str]:
         """
         Returns a list of files with changes in the diff.
         """

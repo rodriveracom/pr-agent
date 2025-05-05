@@ -42,7 +42,7 @@ async def handle_request_comment( url: str, body: str, log_context: dict
         with get_logger().contextualize(**log_context):
             await PRAgent().handle_request(url, body)
     except Exception as e:
-        get_logger().exception(f"Failed to handle webhook", artifact={"url": url, "body": body}, error=str(e))
+        get_logger().exception("Failed to handle webhook", artifact={"url": url, "body": body}, error=str(e))
 
 
 # currently only basic auth is supported with azure webhooks

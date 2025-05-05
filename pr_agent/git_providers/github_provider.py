@@ -8,7 +8,6 @@ import re
 import time
 import traceback
 from datetime import datetime
-from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 from github import AppAuthentication, Auth, Github, GithubException
@@ -31,11 +30,16 @@ from ..algo.utils import (
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
-from .git_provider import MAX_FILES_ALLOWED_FULL, FilePatchInfo, GitProvider, IncrementalPR
+from .git_provider import (
+    MAX_FILES_ALLOWED_FULL,
+    FilePatchInfo,
+    GitProvider,
+    IncrementalPR,
+)
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None):
+    def __init__(self, pr_url: str | None = None):
         self.repo_obj = None
         try:
             self.installation_id = context.get("installation_id", None)
@@ -63,7 +67,7 @@ class GithubProvider(GitProvider):
         else: #Instantiated the provider without a PR / Issue
             self.pr_commits = None
 
-    def _get_issue_handle(self, issue_url) -> Optional[Issue]:
+    def _get_issue_handle(self, issue_url) -> Issue | None:
         repo_name, issue_number = self._parse_issue_url(issue_url)
         if not repo_name or not issue_number:
             get_logger().error(f"Given url: {issue_url} is not a valid issue.")
@@ -77,7 +81,7 @@ class GithubProvider(GitProvider):
                 return None
             # else: Valid repo handle:
             return repo_obj.get_issue(issue_number)
-        except Exception as e:
+        except Exception:
             get_logger().exception(f"Failed to get an issue object for issue: {issue_url}, belonging to owner/repo: {repo_name}")
             return None
 
@@ -104,7 +108,7 @@ class GithubProvider(GitProvider):
                 get_logger().error(f"url is neither an issues url nor a pr url nor a valid git url: {given_url}. Returning empty result.")
                 return ""
             return repo_path
-        except Exception as e:
+        except Exception:
             get_logger().exception(f"unable to parse url: {given_url}. Returning empty result.")
             return ""
 
@@ -118,7 +122,7 @@ class GithubProvider(GitProvider):
     # Given a git repo url, return prefix and suffix of the provider in order to view a given file belonging to that repo.
     # Example: https://github.com/qodo-ai/pr-agent.git and branch: v0.8 -> prefix: "https://github.com/qodo-ai/pr-agent/blob/v0.8", suffix: ""
     # In case git url is not provided, provider will use PR context (which includes branch) to determine the prefix and suffix.
-    def get_canonical_url_parts(self, repo_git_url:str, desired_branch:str) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str, desired_branch:str) -> tuple[str, str]:
         owner = None
         repo = None
         scheme_and_netloc = None
@@ -140,7 +144,7 @@ class GithubProvider(GitProvider):
             scheme_and_netloc = self.base_url_html
             desired_branch = self.repo_obj.default_branch
         if not all([scheme_and_netloc, owner, repo]): #"else": Not invoked from a PR context,but no provided git url for context
-            get_logger().error(f"Unable to get canonical url parts since missing context (PR or explicit git url)")
+            get_logger().error("Unable to get canonical url parts since missing context (PR or explicit git url)")
             return ("", "")
 
         prefix = f"{scheme_and_netloc}/{owner}/{repo}/blob/{desired_branch}"
@@ -219,7 +223,7 @@ class GithubProvider(GitProvider):
         else:
             try:
                 return len(self.git_files)
-            except Exception as e:
+            except Exception:
                 return -1
 
     @retry(exceptions=RateLimitExceeded,
@@ -251,7 +255,7 @@ class GithubProvider(GitProvider):
                 try:
                     names_original = [file.filename for file in files_original]
                     names_new = [file.filename for file in files]
-                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    get_logger().info("Filtered out [ignore] files for pull request:", extra=
                     {"files": names_original,
                      "filtered_files": names_new})
                 except Exception:
@@ -294,7 +298,7 @@ class GithubProvider(GitProvider):
                     if counter_valid >= MAX_FILES_ALLOWED_FULL and patch and not self.incremental.is_incremental:
                         avoid_load = True
                         if counter_valid == MAX_FILES_ALLOWED_FULL:
-                            get_logger().info(f"Too many files in PR, will avoid loading full content for rest of files")
+                            get_logger().info("Too many files in PR, will avoid loading full content for rest of files")
 
                     if avoid_load:
                         new_file_content_str = ""
@@ -421,7 +425,7 @@ class GithubProvider(GitProvider):
             # publish all comments in a single message
             self.pr.create_review(commit=self.last_commit_id, comments=comments)
         except Exception as e:
-            get_logger().info(f"Initially failed to publish inline comments as committable")
+            get_logger().info("Initially failed to publish inline comments as committable")
 
             if (getattr(e, "status", None) == 422 and not disable_fallback):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
@@ -432,8 +436,8 @@ class GithubProvider(GitProvider):
                 self._publish_inline_comments_fallback_with_verification(comments)
             except Exception as e:
                 get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
-                raise e    
-    
+                raise e
+
     def get_review_thread_comments(self, comment_id: int) -> list[dict]:
         """
         Retrieves all comments in the same thread as the given comment.
@@ -447,12 +451,12 @@ class GithubProvider(GitProvider):
         try:
             # Fetch all comments with a single API call
             all_comments = list(self.pr.get_comments())
-            
+
             # Find the target comment by ID
             target_comment = next((c for c in all_comments if c.id == comment_id), None)
             if not target_comment:
                 return []
-        
+
             # Get root comment id
             root_comment_id = target_comment.raw_data.get("in_reply_to_id", target_comment.id)
             # Build the thread - include the root comment and all replies to it
@@ -460,12 +464,12 @@ class GithubProvider(GitProvider):
                 c for c in all_comments if
                 c.id == root_comment_id or c.raw_data.get("in_reply_to_id") == root_comment_id
             ]
-        
-        
+
+
             return thread_comments
-                
+
         except Exception as e:
-            get_logger().exception(f"Failed to get review comments for an inline ask command", artifact={"comment_id": comment_id, "error": e})
+            get_logger().exception("Failed to get review comments for an inline ask command", artifact={"comment_id": comment_id, "error": e})
             return []
 
     def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
@@ -613,7 +617,7 @@ class GithubProvider(GitProvider):
                     "Failed to edit github comment due to permission restrictions",
                     artifact={"error": e})
             else:
-                get_logger().exception(f"Failed to edit github comment", artifact={"error": e})
+                get_logger().exception("Failed to edit github comment", artifact={"error": e})
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
         try:
@@ -718,7 +722,7 @@ class GithubProvider(GitProvider):
         if not self.github_user_id:
             try:
                 self.github_user_id = self.github_client.get_user().raw_data['login']
-            except Exception as e:
+            except Exception:
                 self.github_user_id = ""
                 # logging.exception(f"Failed to get user id, error: {e}")
         return self.github_user_id
@@ -748,7 +752,7 @@ class GithubProvider(GitProvider):
     def get_workspace_name(self):
         return self.repo.split('/')[0]
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         if disable_eyes:
             return None
         try:
@@ -773,7 +777,7 @@ class GithubProvider(GitProvider):
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
 
-    def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
+    def _parse_pr_url(self, pr_url: str) -> tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
         if parsed_url.path.startswith('/api/v3'):
@@ -801,7 +805,7 @@ class GithubProvider(GitProvider):
 
         return repo_name, pr_number
 
-    def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
+    def _parse_issue_url(self, issue_url: str) -> tuple[str, int]:
         parsed_url = urlparse(issue_url)
 
         if parsed_url.path.startswith('/api/v3'): #Check if came from github app
@@ -1083,7 +1087,7 @@ class GithubProvider(GitProvider):
             if not sub_issues_response_json.get("data", {}).get("node", {}).get("subIssues"):
                 get_logger().error("Invalid sub-issues response structure")
                 return sub_issues
-    
+
             nodes = sub_issues_response_json.get("data", {}).get("node", {}).get("subIssues", {}).get("nodes", [])
             get_logger().info(f"Github Sub-issues fetched: {len(nodes)}", artifact={"nodes": nodes})
 

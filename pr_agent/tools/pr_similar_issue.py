@@ -1,7 +1,6 @@
 # pr_agent/tools/pr_similar_issue.py
 import time
 from enum import Enum
-from typing import List
 
 import openai
 from pydantic import BaseModel, Field
@@ -35,9 +34,7 @@ class PRSimilarIssue:
 
         if get_settings().pr_similar_issue.vectordb == "pinecone":
             try:
-                import pandas as pd
                 import pinecone
-                from pinecone_datasets import Dataset, DatasetMetadata
             except:
                 raise Exception("Please install 'pinecone' and 'pinecone_datasets' to use pinecone as vectordb")
             # assuming pinecone api key and environment are set in secrets file
@@ -62,7 +59,7 @@ class PRSimilarIssue:
 
             upsert = True
             pinecone.init(api_key=api_key, environment=environment)
-            if not index_name in pinecone.list_indexes():
+            if index_name not in pinecone.list_indexes():
                 run_from_scratch = True
                 upsert = False
             else:
@@ -481,7 +478,7 @@ class Record(BaseModel):
 
 
 class Corpus(BaseModel):
-    documents: List[Record] = Field(default=[])
+    documents: list[Record] = Field(default=[])
 
     def append(self, r: Record):
         self.documents.append(r)

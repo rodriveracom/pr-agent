@@ -3,7 +3,8 @@ import hashlib
 import hmac
 import time
 from collections import defaultdict
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import HTTPException
 

@@ -1,5 +1,4 @@
 # pr_agent/algo/language_handler.py
-from typing import Dict
 
 from pr_agent.config_loader import get_settings
 
@@ -28,7 +27,7 @@ def is_valid_file(filename:str, bad_extensions=None) -> bool:
     return filename.split('.')[-1] not in bad_extensions
 
 
-def sort_files_by_main_languages(languages: Dict, files: list):
+def sort_files_by_main_languages(languages: dict, files: list):
     """
     Sort files by their main language, put the files that are in the main language first and the rest files after
     """

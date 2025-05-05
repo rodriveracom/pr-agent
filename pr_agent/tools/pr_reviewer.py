@@ -1,16 +1,17 @@
 # pr_agent/tools/pr_reviewer.py
 import copy
 import datetime
-import traceback
-from collections import OrderedDict
 from functools import partial
-from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
-from pr_agent.algo.pr_processing import add_ai_metadata_to_diff_files, get_pr_diff, retry_with_fallback_models
+from pr_agent.algo.pr_processing import (
+    add_ai_metadata_to_diff_files,
+    get_pr_diff,
+    retry_with_fallback_models,
+)
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import (
     ModelType,
@@ -21,11 +22,13 @@ from pr_agent.algo.utils import (
     show_relevant_configurations,
 )
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
+from pr_agent.git_providers import get_git_provider_with_context
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
-from pr_agent.tools.ticket_pr_compliance_check import extract_and_cache_pr_tickets, extract_tickets
+from pr_agent.tools.ticket_pr_compliance_check import (
+    extract_and_cache_pr_tickets,
+)
 
 
 class PRReviewer:
@@ -70,10 +73,10 @@ class PRReviewer:
         if (self.pr_description_files and get_settings().get("config.is_auto_command", False) and
                 get_settings().get("config.enable_ai_metadata", False)):
             add_ai_metadata_to_diff_files(self.git_provider, self.pr_description_files)
-            get_logger().debug(f"AI metadata added to the this command")
+            get_logger().debug("AI metadata added to the this command")
         else:
             get_settings().set("config.enable_ai_metadata", False)
-            get_logger().debug(f"AI metadata is disabled for this command")
+            get_logger().debug("AI metadata is disabled for this command")
 
         self.vars = {
             "title": self.git_provider.pr.title,
@@ -106,7 +109,7 @@ class PRReviewer:
             get_settings().pr_review_prompt.user
         )
 
-    def parse_incremental(self, args: List[str]):
+    def parse_incremental(self, args: list[str]):
         is_incremental = False
         if args and len(args) >= 1:
             arg = args[0]
@@ -156,7 +159,7 @@ class PRReviewer:
                 return None
 
             pr_review = self._prepare_pr_review()
-            get_logger().debug(f"PR output", artifact=pr_review)
+            get_logger().debug("PR output", artifact=pr_review)
 
             if get_settings().config.publish_output:
                 # publish the review
@@ -185,7 +188,7 @@ class PRReviewer:
                                         disable_extra_lines=False,)
 
         if self.patches_diff:
-            get_logger().debug(f"PR diff", diff=self.patches_diff)
+            get_logger().debug("PR diff", diff=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
             get_logger().warning(f"Empty diff for PR: {self.pr_url}")
@@ -269,7 +272,7 @@ class PRReviewer:
 
         return markdown_text
 
-    def _get_user_answers(self) -> Tuple[str, str]:
+    def _get_user_answers(self) -> tuple[str, str]:
         """
         Retrieves the question and answer strings from the discussion messages related to a pull request.
 

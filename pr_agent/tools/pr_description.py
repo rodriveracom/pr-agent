@@ -4,7 +4,6 @@ import copy
 import re
 import traceback
 from functools import partial
-from typing import List, Tuple
 
 import yaml
 from jinja2 import Environment, StrictUndefined
@@ -29,14 +28,15 @@ from pr_agent.algo.utils import (
     show_relevant_configurations,
 )
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import GithubProvider, get_git_provider, get_git_provider_with_context
+from pr_agent.git_providers import (
+    GithubProvider,
+    get_git_provider_with_context,
+)
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
 from pr_agent.tools.ticket_pr_compliance_check import (
     extract_and_cache_pr_tickets,
-    extract_ticket_links_from_pr_description,
-    extract_tickets,
 )
 
 
@@ -128,7 +128,7 @@ class PRDescription:
             if get_settings().pr_description.publish_labels:
                 pr_labels = self._prepare_labels()
             else:
-                get_logger().debug(f"Publishing labels disabled")
+                get_logger().debug("Publishing labels disabled")
 
             if get_settings().pr_description.use_description_markers:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer_with_markers()
@@ -166,14 +166,14 @@ class PRDescription:
                 # publish labels
                 if get_settings().pr_description.publish_labels and pr_labels and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels(update=True)
-                    get_logger().debug(f"original labels", artifact=original_labels)
+                    get_logger().debug("original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
                     new_labels = pr_labels + user_labels
-                    get_logger().debug(f"published labels", artifact=new_labels)
+                    get_logger().debug("published labels", artifact=new_labels)
                     if sorted(new_labels) != sorted(original_labels):
                         self.git_provider.publish_labels(new_labels)
                     else:
-                        get_logger().debug(f"Labels are the same, not updating")
+                        get_logger().debug("Labels are the same, not updating")
 
                 # publish description
                 if get_settings().pr_description.publish_description_as_comment:
@@ -224,7 +224,7 @@ class PRDescription:
             self.patches_diff = patches_diff
             if patches_diff:
                 # generate the prediction
-                get_logger().debug(f"PR diff", artifact=self.patches_diff)
+                get_logger().debug("PR diff", artifact=self.patches_diff)
                 self.prediction = await self._get_prediction(model, patches_diff, prompt="pr_description_prompt")
 
                 # extend the prediction with additional files not shown
@@ -312,7 +312,7 @@ class PRDescription:
                                                        num_input_tokens=tokens_files_walkthrough)
 
             # PR header inference
-            get_logger().debug(f"PR diff only description", artifact=files_walkthrough_prompt)
+            get_logger().debug("PR diff only description", artifact=files_walkthrough_prompt)
             prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough_prompt,
                                                             prompt="pr_description_only_description_prompts")
             prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
@@ -355,7 +355,7 @@ class PRDescription:
                 # add up to MAX_EXTRA_FILES_TO_OUTPUT files
                 counter_extra_files += 1
                 if counter_extra_files > MAX_EXTRA_FILES_TO_OUTPUT:
-                    extra_file_yaml = f"""\
+                    extra_file_yaml = """\
 - filename: |
     Additional files not shown
   changes_title: |
@@ -469,7 +469,7 @@ class PRDescription:
         if 'pr_files' in self.data:
             self.data['pr_files'] = self.data.pop('pr_files')
 
-    def _prepare_labels(self) -> List[str]:
+    def _prepare_labels(self) -> list[str]:
         pr_labels = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
@@ -496,7 +496,7 @@ class PRDescription:
             get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
         return pr_labels
 
-    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str, str, List[dict]]:
+    def _prepare_pr_answer_with_markers(self) -> tuple[str, str, str, list[dict]]:
         get_logger().info(f"Using description marker replacements {self.pr_id}")
 
         # Remove the 'PR Title' key from the dictionary
@@ -507,7 +507,7 @@ class PRDescription:
         else:
             # Assign the value of the 'PR Title' key to 'title' variable
             title = ai_title
-      
+
         body = self.user_description
         if get_settings().pr_description.include_generated_by_header:
             ai_header = f"### 🤖 Generated by PR Agent at {self.git_provider.last_commit_id.sha}\n\n"
@@ -542,7 +542,7 @@ class PRDescription:
 
         return title, body, walkthrough_gfm, pr_file_changes
 
-    def _prepare_pr_answer(self) -> Tuple[str, str, str, List[dict]]:
+    def _prepare_pr_answer(self) -> tuple[str, str, str, list[dict]]:
         """
         Prepare the PR description based on the AI prediction data.
 
@@ -656,7 +656,7 @@ class PRDescription:
             return pr_body, pr_comments
         try:
             pr_body += "<table>"
-            header = f"Relevant files"
+            header = "Relevant files"
             delta = 75
             # header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th align="left">{header}</th></tr></thead>"""
@@ -669,7 +669,7 @@ class PRDescription:
                 if use_collapsible_file_list:
                     pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
                 else:
-                    pr_body += f"""<td><table>"""
+                    pr_body += """<td><table>"""
                 for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`").rstrip()
                     filename_publish = filename.split("/")[-1]

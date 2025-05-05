@@ -1,7 +1,6 @@
 # pr_agent/config_loader.py
 from os.path import abspath, dirname, join
 from pathlib import Path
-from typing import Optional
 
 from dynaconf import Dynaconf
 from starlette_context import context
@@ -54,7 +53,7 @@ def get_settings(use_context=False):
 
 
 # Add local configuration from pyproject.toml of the project being reviewed
-def _find_repository_root() -> Optional[Path]:
+def _find_repository_root() -> Path | None:
     """
     Identify project root directory by recursively searching for the .git directory in the parent directories.
     """
@@ -68,7 +67,7 @@ def _find_repository_root() -> Optional[Path]:
     return None
 
 
-def _find_pyproject() -> Optional[Path]:
+def _find_pyproject() -> Path | None:
     """
     Search for file pyproject.toml in the repository root.
     """

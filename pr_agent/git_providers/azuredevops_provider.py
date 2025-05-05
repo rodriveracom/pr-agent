@@ -1,13 +1,16 @@
 # pr_agent/git_providers/azuredevops_provider.py
 import os
-from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import PRDescriptionHeader, clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
+from ..algo.utils import (
+    PRDescriptionHeader,
+    find_line_number_of_relevant_line_in_file,
+    load_large_diff,
+)
 from ..config_loader import get_settings
 from ..log import get_logger
 from .git_provider import GitProvider
@@ -40,7 +43,7 @@ except ImportError:
 class AzureDevopsProvider(GitProvider):
 
     def __init__(
-            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+            self, pr_url: str | None = None, incremental: bool | None = False
     ):
         if not AZURE_DEVOPS_AVAILABLE:
             raise ImportError(
@@ -290,7 +293,7 @@ class AzureDevopsProvider(GitProvider):
             diffs = filter_ignored(diffs_original, 'azure')
             if diffs_original != diffs:
                 try:
-                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    get_logger().info("Filtered out [ignore] files for pull request:", extra=
                     {"files": diffs_original,  # diffs is just a list of names
                      "filtered_files": diffs})
                 except Exception:
@@ -538,14 +541,14 @@ class AzureDevopsProvider(GitProvider):
                     comment_list.append(comment)
         return comment_list
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         return True
 
     @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
+    def _parse_pr_url(pr_url: str) -> tuple[str, str, int]:
         parsed_url = urlparse(pr_url)
 
         path_parts = parsed_url.path.strip("/").split("/")

@@ -139,7 +139,7 @@ def adopt_to_gerrit_message(message):
 def add_suggestion(src_filename, context: str, start, end: int):
     with (
         NamedTemporaryFile("w", delete=False) as tmp,
-        open(src_filename, "r") as src
+        open(src_filename) as src
     ):
         lines = src.readlines()
         tmp.writelines(lines[:start - 1])

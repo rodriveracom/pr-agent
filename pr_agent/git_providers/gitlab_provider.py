@@ -1,19 +1,20 @@
 # pr_agent/git_providers/gitlab_provider.py
 import difflib
-import hashlib
 import re
-from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import gitlab
-import requests
 from gitlab import GitlabGetError
 
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
+from ..algo.utils import (
+    clip_tokens,
+    find_line_number_of_relevant_line_in_file,
+    load_large_diff,
+)
 from ..config_loader import get_settings
 from ..log import get_logger
 from .git_provider import MAX_FILES_ALLOWED_FULL, GitProvider
@@ -25,7 +26,7 @@ class DiffNotFoundError(Exception):
 
 class GitLabProvider(GitProvider):
 
-    def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
+    def __init__(self, merge_request_url: str | None = None, incremental: bool | None = False):
         gitlab_url = get_settings().get("GITLAB.URL", None)
         if not gitlab_url:
             raise ValueError("GitLab URL is not set in the config file")
@@ -79,7 +80,7 @@ class GitLabProvider(GitProvider):
     # Given a git repo url, return prefix and suffix of the provider in order to view a given file belonging to that repo.
     # Example: https://gitlab.com/codiumai/pr-agent.git and branch: t1 -> prefix: "https://gitlab.com/codiumai/pr-agent/-/blob/t1", suffix: "?ref_type=heads"
     # In case git url is not provided, provider will use PR context (which includes branch) to determine the prefix and suffix.
-    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> tuple[str, str]:
         repo_path = ""
         if not repo_git_url and not self.pr_url:
             get_logger().error("Cannot get canonical URL parts: missing either context PR URL or a repo GIT URL")
@@ -88,7 +89,7 @@ class GitLabProvider(GitProvider):
             repo_path = self._get_project_path_from_pr_or_issue_url(self.pr_url)
             try:
                 desired_branch = self.gl.projects.get(self.id_project).default_branch
-            except Exception as e:
+            except Exception:
                 get_logger().exception(f"Cannot get PR: {self.pr_url} default branch. Tried project ID: {self.id_project}")
                 return ("", "")
         else: #Use repo git url
@@ -144,7 +145,7 @@ class GitLabProvider(GitProvider):
                     'original_files': names_original,
                     'filtered_files': names_filtered
                 })
-            except Exception as e:
+            except Exception:
                 pass
 
         diff_files = []
@@ -162,7 +163,7 @@ class GitLabProvider(GitProvider):
                 new_file_content_str = self.get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
             else:
                 if counter_valid == MAX_FILES_ALLOWED_FULL:
-                    get_logger().info(f"Too many files in PR, will avoid loading full content for rest of files")
+                    get_logger().info("Too many files in PR, will avoid loading full content for rest of files")
                 original_file_content_str = ''
                 new_file_content_str = ''
 
@@ -307,7 +308,7 @@ class GitLabProvider(GitProvider):
             get_logger().debug(f"Creating comment in MR {self.id_mr} with body {body} and position {pos_obj}")
             try:
                 self.mr.discussions.create({'body': body, 'position': pos_obj})
-            except Exception as e:
+            except Exception:
                 try:
                     # fallback - create a general note on the file in the MR
                     if 'suggestion_orig_location' in original_suggestion:
@@ -337,7 +338,7 @@ class GitLabProvider(GitProvider):
                     link = self.get_line_link(relevant_file, line_start, line_end)
                     body_fallback =f"**Suggestion:** {content} [{label}, importance: {score}]\n\n"
                     body_fallback +=f"\n\n<details><summary>[{target_file.filename} [{line_start}-{line_end}]]({link}):</summary>\n\n"
-                    body_fallback += f"\n\n___\n\n`(Cannot implement directly - GitLab API allows committable suggestions strictly on MR diff lines)`"
+                    body_fallback += "\n\n___\n\n`(Cannot implement directly - GitLab API allows committable suggestions strictly on MR diff lines)`"
                     body_fallback+="</details>\n\n"
                     diff_patch = difflib.unified_diff(old_code_snippet.split('\n'),
                                                 new_code_snippet.split('\n'), n=999)
@@ -361,10 +362,10 @@ class GitLabProvider(GitProvider):
 
                     # get_logger().debug(
                     #     f"Failed to create comment in MR {self.id_mr} with position {pos_obj} (probably not a '+' line)")
-                except Exception as e:
+                except Exception:
                     get_logger().exception(f"Failed to create comment in MR {self.id_mr}")
 
-    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: str) -> Optional[dict]:
+    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: str) -> dict | None:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
         if not changes:
             get_logger().error('No changes found for the merge request.')
@@ -527,13 +528,13 @@ class GitLabProvider(GitProvider):
     def get_workspace_name(self):
         return self.id_project.split('/')[0]
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         return True
 
-    def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
+    def _parse_merge_request_url(self, merge_request_url: str) -> tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
 
         path_parts = parsed_url.path.strip('/').split('/')

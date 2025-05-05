@@ -5,7 +5,6 @@ try:
 except:  # we don't enforce langchain as a dependency, so if it's not installed, just move on
     pass
 
-import functools
 
 from openai import APIError, RateLimitError, Timeout
 from retry import retry
@@ -71,7 +70,7 @@ class LangChainOpenAIHandler(BaseAiHandler):
                 else:
                     return ChatOpenAI(openai_api_key=get_settings().openai.key, openai_api_base=openai_api_base)
         except AttributeError as e:
-            if getattr(e, "name"):
+            if e.name:
                 raise ValueError(f"OpenAI {e.name} is required") from e
             else:
                 raise e

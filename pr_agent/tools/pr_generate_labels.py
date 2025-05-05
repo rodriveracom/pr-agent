@@ -1,8 +1,6 @@
 # pr_agent/tools/pr_generate_labels.py
 import copy
-import re
 from functools import partial
-from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
 
@@ -157,7 +155,7 @@ class PRGenerateLabels:
 
 
 
-    def _prepare_labels(self) -> List[str]:
+    def _prepare_labels(self) -> list[str]:
         pr_types = []
 
         # If the 'labels' key is present in the dictionary, split its value by comma and assign it to 'pr_types'

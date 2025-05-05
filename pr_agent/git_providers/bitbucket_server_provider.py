@@ -3,7 +3,6 @@ import difflib
 import re
 import shlex
 import subprocess
-from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
 from atlassian.bitbucket import Bitbucket
@@ -21,8 +20,8 @@ from .git_provider import GitProvider
 
 class BitbucketServerProvider(GitProvider):
     def __init__(
-            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False,
-            bitbucket_client: Optional[Bitbucket] = None,
+            self, pr_url: str | None = None, incremental: bool | None = False,
+            bitbucket_client: Bitbucket | None = None,
     ):
         self.bitbucket_server_url = None
         self.workspace_slug = None
@@ -52,14 +51,14 @@ class BitbucketServerProvider(GitProvider):
         try:
             parsed_url = urlparse(self.pr_url)
             return f"{parsed_url.scheme}://{parsed_url.netloc}/scm/{self.workspace_slug.lower()}/{self.repo_slug.lower()}.git"
-        except Exception as e:
+        except Exception:
             get_logger().exception(f"url is not a valid merge requests url: {self.pr_url}")
             return ""
 
     # Given a git repo url, return prefix and suffix of the provider in order to view a given file belonging to that repo.
     # Example: https://bitbucket.dev.my_inc.com/scm/my_work/my_repo.git and branch: my_branch -> prefix: "https://bitbucket.dev.my_inc.com/projects/MY_WORK/repos/my_repo/browse/src", suffix: "?at=refs%2Fheads%2Fmy_branch"
     # In case git url is not provided, provider will use PR context (which includes branch) to determine the prefix and suffix.
-    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> tuple[str, str]:
         workspace_name = None
         project_name = None
         if not repo_git_url:
@@ -185,7 +184,7 @@ class BitbucketServerProvider(GitProvider):
                                                                      self.repo_slug,
                                                                      path,
                                                                      commit_id)
-        except HTTPError as e:
+        except HTTPError:
             get_logger().debug(f"File {path} not found at commit id: {commit_id}")
         return file_content
 
@@ -413,7 +412,7 @@ class BitbucketServerProvider(GitProvider):
             "Bitbucket provider does not support issue comments yet"
         )
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
@@ -430,7 +429,7 @@ class BitbucketServerProvider(GitProvider):
         return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
     @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
+    def _parse_pr_url(pr_url: str) -> tuple[str, str, int]:
         # pr url format: f"{bitbucket_server}/projects/{project_name}/repos/{repository_name}/pull-requests/{pr_id}"
         parsed_url = urlparse(pr_url)
 
@@ -535,7 +534,7 @@ class BitbucketServerProvider(GitProvider):
         bearer_token = self.bearer_token
         if not bearer_token:
             #Shouldn't happen since this is checked in _prepare_clone, therefore - throwing an exception.
-            raise RuntimeError(f"Bearer token is required!")
+            raise RuntimeError("Bearer token is required!")
 
         cli_args = shlex.split(f"git clone -c http.extraHeader='Authorization: Bearer {bearer_token}' "
                                f"--filter=blob:none --depth 1 {repo_url} {dest_folder}")

@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import traceback
-from typing import Callable, List, Tuple
+from collections.abc import Callable
 
 from github import RateLimitExceededException
 
-from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.git_patch_processing import (
     decouple_and_convert_to_hunks_with_lines_numbers,
     extend_patch,
@@ -14,7 +13,7 @@ from pr_agent.algo.git_patch_processing import (
 )
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from pr_agent.algo.types import EDIT_TYPE
 from pr_agent.algo.utils import ModelType, clip_tokens, get_max_tokens, get_model
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
@@ -64,7 +63,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
     if pr_languages:
         try:
             get_logger().info(f"PR main language: {pr_languages[0]['language']}")
-        except Exception as e:
+        except Exception:
             pass
 
     # generate a standard diff string, with patch extension
@@ -158,7 +157,7 @@ def get_pr_diff_multiple_patchs(git_provider: GitProvider, token_handler: TokenH
     if pr_languages:
         try:
             get_logger().info(f"PR main language: {pr_languages[0]['language']}")
-        except Exception as e:
+        except Exception:
             pass
 
     patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list = \
@@ -171,7 +170,7 @@ def pr_generate_extended_diff(pr_languages: list,
                               token_handler: TokenHandler,
                               add_line_numbers_to_hunks: bool,
                               patch_extra_lines_before: int = 0,
-                              patch_extra_lines_after: int = 0) -> Tuple[list, int, list]:
+                              patch_extra_lines_after: int = 0) -> tuple[list, int, list]:
     total_tokens = token_handler.prompt_tokens  # initial tokens
     patches_extended = []
     patches_extended_tokens = []
@@ -212,7 +211,7 @@ def pr_generate_extended_diff(pr_languages: list,
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
                                 convert_hunks_to_line_numbers: bool,
-                                large_pr_handling: bool) -> Tuple[list, list, list, list, dict, list]:
+                                large_pr_handling: bool) -> tuple[list, list, list, list, dict, list]:
     deleted_files_list = []
 
     # sort each one of the languages in top_langs by the number of tokens in the diff
@@ -324,7 +323,7 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
     all_models = _get_all_models(model_type)
     all_deployments = _get_all_deployments(all_models)
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
-    for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments)):
+    for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments, strict=False)):
         try:
             get_logger().debug(
                 f"Generating prediction with {model}"
@@ -340,7 +339,7 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
                 raise Exception(f"Failed to generate prediction with any model of {all_models}")
 
 
-def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
+def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> list[str]:
     if model_type == ModelType.WEAK:
         model = get_model('model_weak')
     elif model_type == ModelType.REASONING:
@@ -356,7 +355,7 @@ def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
     return all_models
 
 
-def _get_all_deployments(all_models: List[str]) -> List[str]:
+def _get_all_deployments(all_models: list[str]) -> list[str]:
     deployment_id = get_settings().get("openai.deployment_id", None)
     fallback_deployments = get_settings().get("openai.fallback_deployments", [])
     if not isinstance(fallback_deployments, list) and fallback_deployments:
@@ -375,7 +374,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
                        token_handler: TokenHandler,
                        model: str,
                        max_calls: int = 5,
-                       add_line_numbers: bool = True) -> List[str]:
+                       add_line_numbers: bool = True) -> list[str]:
     """
     Retrieves the diff files from a Git provider, sorts them by main language, and generates patches for each file.
     The patches are split into multiple groups based on the maximum number of tokens allowed for the given model.
@@ -508,7 +507,7 @@ def add_ai_metadata_to_diff_files(git_provider, pr_description_files):
     """
     try:
         if not pr_description_files:
-            get_logger().warning(f"PR description files are empty.")
+            get_logger().warning("PR description files are empty.")
             return
         available_files = {pr_file['full_file_name'].strip(): pr_file for pr_file in pr_description_files}
         diff_files = git_provider.get_diff_files()
@@ -519,7 +518,7 @@ def add_ai_metadata_to_diff_files(git_provider, pr_description_files):
                 file.ai_file_summary = available_files[filename]
                 found_any_match = True
         if not found_any_match:
-            get_logger().error(f"Failed to find any matching files between PR description and diff files.",
+            get_logger().error("Failed to find any matching files between PR description and diff files.",
                                artifact={"pr_description_files": pr_description_files})
     except Exception as e:
         get_logger().error(f"Failed to add AI metadata to diff files: {e}",

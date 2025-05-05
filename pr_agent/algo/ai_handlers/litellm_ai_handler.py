@@ -37,7 +37,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         self.azure = False
         self.api_base = None
         self.repetition_penalty = None
-        
+
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
@@ -107,7 +107,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         # Support mistral models
         if get_settings().get("MISTRAL.KEY", None):
             os.environ["MISTRAL_API_KEY"] = get_settings().get("MISTRAL.KEY")
-        
+
         # Support codestral models
         if get_settings().get("CODESTRAL.KEY", None):
             os.environ["CODESTRAL_API_KEY"] = get_settings().get("CODESTRAL.KEY")
@@ -119,7 +119,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             access_token = self._get_azure_ad_token()
             litellm.api_key = access_token
             openai.api_key = access_token
-            
+
             # Set API base from settings
             self.api_base = get_settings().azure_ad.api_base
             litellm.api_base = self.api_base
@@ -288,7 +288,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                     # check if the image link is alive
                     r = requests.head(img_path, allow_redirects=True)
                     if r.status_code == 404:
-                        error_msg = f"The image link is not [alive](img_path).\nPlease repost the original image as a comment, and send the question again with 'quote reply' (see [instructions](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images-using-the-pr-code-as-context))."
+                        error_msg = "The image link is not [alive](img_path).\nPlease repost the original image as a comment, and send the question again with 'quote reply' (see [instructions](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images-using-the-pr-code-as-context))."
                         get_logger().error(error_msg)
                         return f"{error_msg}", "error"
                 except Exception as e:

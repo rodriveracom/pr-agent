@@ -1,7 +1,6 @@
 # pr_agent/algo/types.py
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class EDIT_TYPE(Enum):
@@ -23,5 +22,5 @@ class FilePatchInfo:
     old_filename: str = None
     num_plus_lines: int = -1
     num_minus_lines: int = -1
-    language: Optional[str] = None
+    language: str | None = None
     ai_file_summary: str = None
